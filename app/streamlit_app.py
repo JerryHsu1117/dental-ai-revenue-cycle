@@ -8,14 +8,21 @@ load_dotenv(find_dotenv('.env'), override=True)
 
 st.set_page_config(page_title='Dental AI Platform', layout='wide')
 
+def get_secret(key):
+    # Try Streamlit Cloud secrets first, fall back to .env for local dev
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return os.getenv(key)
+
 def get_connection():
     return snowflake.connector.connect(
-        account=os.getenv('SNOWFLAKE_ACCOUNT'),
-        user=os.getenv('SNOWFLAKE_USER'),
-        password=os.getenv('SNOWFLAKE_PASSWORD'),
-        warehouse=os.getenv('SNOWFLAKE_WAREHOUSE'),
-        database=os.getenv('SNOWFLAKE_DATABASE'),
-        schema=os.getenv('SNOWFLAKE_SCHEMA')
+        account=get_secret('SNOWFLAKE_ACCOUNT'),
+        user=get_secret('SNOWFLAKE_USER'),
+        password=get_secret('SNOWFLAKE_PASSWORD'),
+        warehouse=get_secret('SNOWFLAKE_WAREHOUSE'),
+        database=get_secret('SNOWFLAKE_DATABASE'),
+        schema=get_secret('SNOWFLAKE_SCHEMA')
     )
 
 def execute_query(sql):
@@ -121,4 +128,3 @@ elif page == 'Add New Patient':
             cur.close()
             conn.close()
             st.success(f'Patient {first} {last} added successfully')
-            
